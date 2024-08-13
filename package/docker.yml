@@ -1,0 +1,106 @@
+- hosts: all
+  remote_user: user
+  become: yes
+
+  tasks:
+    - name: Update and upgrade apt packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Installing Prerequisites for packages
+      apt:
+        name:
+          - ca-certificates
+          - apt-transport-https
+          - software-properties-common
+          - curl
+          - wget
+        state: present
+
+    - name: Add Si Paling Odrek PHP PPA #Ondřej Surý
+      ansible.builtin.apt_repository:
+        repo: ppa:ondrej/php
+        state: present
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Installing some packages for Docker
+      apt:
+        name:
+          - docker
+          - docker.io
+          - docker-compose
+          - nginx
+        state: present
+
+    - name: Installing Nginx and PHP8.3
+      apt:
+        name:
+          - nginx
+          - php8.3-fpm
+
+    - name: Installing some extention for PHP8.3
+      apt:
+        name:
+          - php8.3-common
+          - php8.3-mysql
+          - php8.3-zip
+          - php8.3-gd
+          - php8.3-mbstring
+          - php8.3-cli
+          - php8.3-curl
+          - php8.3-xml
+          - php8.3-bcmath
+
+    - name: Remove default Nginx site configuration
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      ignore_errors: yes
+
+    - name: Configure Nginx to use PHP
+      ansible.builtin.template:
+        src: requirements/nginx_site.conf.j2
+        dest: /etc/nginx/sites-available/nginx.conf
+      notify:
+        - Restart Nginx
+
+    - name: Create symlink to new site configuration
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/nginx.conf
+        dest: /etc/nginx/sites-enabled/nginx.conf
+        state: link
+        owner: root
+        group: root
+      notify:
+        - Restart Nginx
+
+    - name: Deploy landing page
+      ansible.builtin.copy:
+        src: requirements/index.html
+        dest: /var/www/html/index.php
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Deploy PHP info page
+      ansible.builtin.copy:
+        src: requirements/phpinfo.php
+        dest: /var/www/html/phpinfo.php
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Nginx Restart
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+  handlers:
+    - name: Restart Nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted

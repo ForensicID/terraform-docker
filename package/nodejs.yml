@@ -1,0 +1,28 @@
+- hosts: nodejs
+  remote_user: user
+  become: yes
+
+  tasks:
+
+    - name: Menyalin direktori APP NodeJS
+      copy:
+        src: node-package/
+        dest: /home/user/
+
+    - name: Build a Image NodeJS
+      shell: |
+        echo "Build Image APP NodeJS"
+        sudo docker build -t node_test:0.0.1 .
+
+    - name: Running NodeJS Image
+      shell: |
+        echo "Running Image APP NodeJS"
+        sudo docker container run -d --name nodejs -p 8000:8000 node_test:0.0.1
+
+    - name: Checking Container for Running
+      command: sudo docker ps -a
+      register: result
+
+    - name: Menampilkan hasil Running
+      debug:
+        msg: "Running Image APP NodeJS State: {{ result.stdout }}"

@@ -1,0 +1,28 @@
+- hosts: mariadb
+  remote_user: user
+  become: yes
+
+  tasks:
+
+    - name: Copying file Docker Compose
+      copy:
+        src: mariadb/
+        dest: /home/user/
+
+    - name: Build a Compose MariaDB
+      shell: |
+        echo "Build Compose MariaDB"
+        sudo docker-compose up -d
+      register: result_compose
+
+    - name: Menampilkan hasil Running
+      debug:
+        msg: "Running Docker Compose State: {{ result_compose.stdout }}"
+
+    - name: Checking Container for Running
+      command: sudo docker ps -a
+      register: result
+
+    - name: Menampilkan hasil Running
+      debug:
+        msg: "Running Container MariaDB: {{ result.stdout }}"

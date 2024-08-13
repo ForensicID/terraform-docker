@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example_root_password
+      MYSQL_DATABASE: example_database
+      MYSQL_USER: example_user
+      MYSQL_PASSWORD: example_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - app_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    networks:
+      - app_network
+
+volumes:
+  mariadb_data:
+
+networks:
+  app_network:

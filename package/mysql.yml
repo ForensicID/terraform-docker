@@ -1,0 +1,28 @@
+- hosts: mysql
+  remote_user: user
+  become: yes
+
+  tasks:
+
+    - name: Copying file Docker Compose
+      copy:
+        src: mysql/
+        dest: /home/user/
+
+    - name: Build a Compose MySQL
+      shell: |
+        echo "Build Compose MySQL"
+        sudo docker-compose up -d
+      register: result_compose
+
+    - name: Menampilkan hasil Running
+      debug:
+        msg: "Running Docker Compose State: {{ result_compose.stdout }}"
+
+    - name: Checking Container for Running
+      command: sudo docker ps -a
+      register: result
+
+    - name: Menampilkan hasil Running
+      debug:
+        msg: "Running Container MySQL: {{ result.stdout }}"
